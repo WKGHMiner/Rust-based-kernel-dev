@@ -1,0 +1,14 @@
+[package]
+name = "os"
+version = "0.1.0"
+edition = "2024"
+
+[profile.release]
+debug = true
+
+[dependencies]
+sbi-rt = { version = "0.0.3", features = ["legacy"] }
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
+riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] } 
+
+user = { path = "./user" }

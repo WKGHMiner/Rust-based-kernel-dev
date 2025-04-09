@@ -1,5 +1,8 @@
 use core::panic::PanicInfo;
-use crate::{error, error_print, info_print, println, sbi::shutdown};
+use crate::{
+    error, error_print, info_print, println,
+    sbi::shutdown
+};
 
 #[cfg(not(test))]
 #[panic_handler]

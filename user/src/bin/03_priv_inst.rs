@@ -11,7 +11,7 @@ extern crate user;
 #[unsafe(no_mangle)]
 fn main() -> i32 {
     debug!("Task 3.");
-    info!("The kernel would instantly kill this application,");
+    info_print!("The kernel would instantly kill this application,");
     info!("as it trys to run priviledged instructions in user mode.");
     
     unsafe {asm! {

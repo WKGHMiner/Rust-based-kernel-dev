@@ -1,7 +1,9 @@
 /target
-
 /user/target
 
 /.vscode
 
 Cargo.lock
+
+link_app.S
+disasm.asm

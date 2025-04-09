@@ -1,5 +1,5 @@
 use crate::{
-    println, info,
+    print, info,
     batch::run_next_app
 };
 
@@ -22,7 +22,7 @@ pub fn sys_write(fd: usize, buffer: *const u8, length: usize) -> isize {
         STDOUT => {
             let slice = unsafe { core::slice::from_raw_parts(buffer, length) };
             let str = core::str::from_utf8(slice).unwrap();
-            println!("{}", str);
+            print!("{}", str);
 
             length as isize
         },

@@ -4,7 +4,7 @@ use core::{
     mem::size_of,
 };
 use crate::{
-    info, println,
+    info, info_print, warn,
     sync::SpinLock,
     trap::TrapContext
 };
@@ -12,6 +12,7 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref APP_MANAGER: SpinLock<AppManager> = {
+        // _num_app is a beacon that point to the include section odf our applications.
         unsafe extern "C" {
             fn _num_app();
         }
@@ -20,7 +21,8 @@ lazy_static! {
         let num_app = unsafe { num_app_ptr.read_volatile() };
 
         let mut app_start = [0usize; MAX_APP_NUM + 1];
-        let app_start_raw = unsafe { from_raw_parts(app_start.as_ptr(), num_app + 1) };
+        // Here, plus the ptr by 1, then it will return the location of `app_0_start`.
+        let app_start_raw = unsafe { from_raw_parts(num_app_ptr.add(1), num_app + 1) };
         app_start[..=num_app].copy_from_slice(app_start_raw);
 
         let manager = AppManager { num_app, current_app: 0, app_start };
@@ -55,7 +57,7 @@ impl KernelStack {
         let mut ptr = self.get_stack_pointer() as *mut TrapContext;
         unsafe {
             ptr = ptr.byte_sub(size_of::<TrapContext>());
-            ptr.write(ctx);
+            *ptr = ctx;
 
             ptr.as_mut().unwrap()
         }
@@ -73,6 +75,7 @@ impl UserStack {
     }
 }
 
+#[derive(Debug)]
 struct AppManager {
     num_app: usize,
     current_app: usize,
@@ -82,13 +85,10 @@ struct AppManager {
 impl AppManager {
     pub fn print_app_info(&self) {
         info!("[kernel] num_app = {}", self.num_app);
+        
         for i in 0..self.num_app {
-            println!(
-                "[kernel] app_{} [{:#x}, {:#x})",
-                i,
-                self.app_start[i],
-                self.app_start[i + 1]
-            );
+            info_print!("[kernel] app_{} location: ", i);
+            warn!("[{:#x}, {:#x})", self.app_start[i], self.app_start[i + 1]);
         }
     }
 
@@ -97,19 +97,19 @@ impl AppManager {
         if app_id >= self.num_app {
             panic!("All applications completed.");
         } else {
-            info!("[kernel] Loading app_{}", app_id);
+            info!("[kernel] Loading app_{}...", app_id);
         }
 
-        for offset in 0..APP_SIZE_LIMIT {
-            (APP_BASE_ADDR as *mut u8).add(offset).write_volatile(0)
+        for addr in APP_BASE_ADDR..APP_SIZE_LIMIT + APP_BASE_ADDR {
+            (addr as *mut u8).write_volatile(0)
         }
 
         let src = from_raw_parts(
-            self.app_start[app_id] as *const usize,
+            self.app_start[app_id] as *const u8,
             self.app_start[app_id + 1] - self.app_start[app_id]
         );
         let dst = from_raw_parts_mut(
-            APP_BASE_ADDR as *mut usize,
+            APP_BASE_ADDR as *mut u8,
             src.len()
         );
         dst.copy_from_slice(src);

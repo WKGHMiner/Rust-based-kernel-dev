@@ -22,7 +22,7 @@ pub fn rust_main() -> ! {
 
     main();
     
-    shutdown(false);
+    shutdown!(false);
 }
 
 /// Logs some important memory layout information to the console,

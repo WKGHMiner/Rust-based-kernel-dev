@@ -11,7 +11,7 @@ extern crate user;
 #[unsafe(no_mangle)]
 fn main() -> i32 {
     debug!("Task 4.");
-    info_print!("The kernel would instantly kill this application,");
+    info_print!("The kernel would instantly kill this application, ");
     info!("as it trys to access priviledged CSR in user mode.");
     
     unsafe { sstatus::set_spp(SPP::User) }

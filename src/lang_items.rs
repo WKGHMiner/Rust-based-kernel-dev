@@ -1,7 +1,6 @@
 use core::panic::PanicInfo;
 use crate::{
-    error, error_print, info_print, println,
-    sbi::shutdown
+    error, error_print, info_print, println, shutdown
 };
 
 #[cfg(not(test))]
@@ -22,7 +21,7 @@ pub fn handle_panic(info: &PanicInfo) -> ! {
     info_print!("Message: ");
     println!("{}", info.message());
 
-    shutdown(true)
+    shutdown!(true);
 }
 
 #[cfg(test)]
@@ -32,5 +31,5 @@ pub fn handle_panic(info: &PanicInfo) -> ! {
 
     warn!("Test failed.");
     
-    shutdown(true);
+    shutdown!(true);
 }

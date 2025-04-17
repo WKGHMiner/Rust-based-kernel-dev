@@ -143,6 +143,13 @@ macro_rules! trace {
     }
 }
 
+#[macro_export]
+macro_rules! shutdown {
+    ($failure: expr) => {
+        $crate::_shutdown($failure);
+    };
+}
+
 #[doc(hidden)]
 pub fn _print(args: Arguments) {
     Stdout.write_fmt(args).unwrap();

@@ -16,7 +16,9 @@ pub use lang_items::{handle_panic, test_runner};
 #[unsafe(link_section = ".text.entry")]
 pub extern "C" fn _start() -> ! {
     clear_bss();
+
     exit(main());
+
     unreachable!("Unreachable code after system exit return.");
 }
 

@@ -4,6 +4,7 @@ use core::{
     mem::size_of,
 };
 use crate::{
+    shutdown,
     info, info_print, warn,
     sync::SpinLock,
     trap::TrapContext
@@ -12,9 +13,9 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref APP_MANAGER: SpinLock<AppManager> = {
-        // _num_app is a beacon that point to the include section odf our applications.
+        // _num_app is a beacon that points to the include section of our applications.
         unsafe extern "C" {
-            fn _num_app();
+            safe fn _num_app();
         }
 
         let num_app_ptr = _num_app as usize as *const usize;
@@ -54,9 +55,8 @@ impl KernelStack {
     }
 
     pub fn push_context(&self, ctx: TrapContext) -> &'static mut TrapContext {
-        let mut ptr = self.get_stack_pointer() as *mut TrapContext;
+        let ptr = (self.get_stack_pointer() - size_of::<TrapContext>()) as *mut TrapContext;
         unsafe {
-            ptr = ptr.byte_sub(size_of::<TrapContext>());
             *ptr = ctx;
 
             ptr.as_mut().unwrap()
@@ -95,7 +95,7 @@ impl AppManager {
     #[allow(unsafe_op_in_unsafe_fn, reason = "Most of the ops are unsafe.")]
     unsafe fn load_app(&self, app_id: usize) {
         if app_id >= self.num_app {
-            panic!("All applications completed.");
+            shutdown!(false);
         } else {
             info!("[kernel] Loading app_{}...", app_id);
         }
@@ -135,10 +135,10 @@ pub fn print_app_info() {
 }
 
 pub fn run_next_app() -> ! {
-    APP_MANAGER.scoped(|mut guard| {
-        let current = guard.get_current_app();
-        unsafe { guard.load_app(current) }
-        guard.move_to_next_app();
+    APP_MANAGER.scoped(|mut manager| {
+        let current = manager.get_current_app();
+        unsafe { manager.load_app(current) }
+        manager.move_to_next_app();
     });
 
     let ctx = TrapContext::new(APP_BASE_ADDR, USER_STACK.get_stack_pointer());

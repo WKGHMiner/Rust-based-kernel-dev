@@ -55,7 +55,7 @@ fn log_info() {
         sdata as usize, edata as usize
     );
     warn!(
-        "[kernel] boot_stack top=bottom={:#x}, lower_bound={:#x}",
+        "[kernel] boot_stack top = {:#x}, lower_bound = {:#x}",
         boot_stack_top as usize, boot_stack_lower_bound as usize
     );
     error!("[kernel] .bss [{:#x}, {:#x})", sbss as usize, ebss as usize);

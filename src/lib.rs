@@ -10,6 +10,7 @@ mod batch;
 pub mod sbi;
 pub mod sync;
 mod trap;
+mod syscall;
 
 pub use lang_items::handle_panic;
 pub use sbi::*;

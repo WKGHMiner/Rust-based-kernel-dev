@@ -1,6 +1,6 @@
 use crate::{
     error, error_print, warn, warn_print,
-    sbi::*,
+    syscall::*,
     batch::run_next_app
 };
 use core::arch::global_asm;
@@ -59,7 +59,7 @@ fn handle_interrupt(_ctx: &mut TrapContext, int: Interrupt) -> &mut TrapContext 
     use scause::Interrupt::*;
 
     match int {
-        UserTimer => unimplemented!("There is expected to be a interval execution."),
+        UserTimer => unimplemented!("There is expected to be a interval switch between processes."),
         _ => {
             error_print!("Unsupported trap: ");
             warn_print!("Interrupt({:?}), tval: {:?}", int, stval::read());

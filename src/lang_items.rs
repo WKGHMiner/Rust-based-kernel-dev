@@ -1,5 +1,6 @@
 use core::panic::PanicInfo;
 use crate::{
+    syscall::print_stack_trace,
     error, error_print, info_print, println, shutdown
 };
 
@@ -16,6 +17,8 @@ pub fn handle_panic(info: &PanicInfo) -> ! {
     } else {
         error!("Panicked at unknown location.");
     }
+
+    unsafe { print_stack_trace() }
 
     // Panic message log.
     info_print!("Message: ");

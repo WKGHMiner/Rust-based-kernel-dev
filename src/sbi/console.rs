@@ -143,11 +143,17 @@ macro_rules! trace {
     }
 }
 
+/// Shuts qemu down, and logs an extra message on quitting.
 #[macro_export]
 macro_rules! shutdown {
     ($failure: expr) => {
         $crate::_shutdown($failure);
     };
+
+    ($failure: expr $(, $arg: tt)*) => {
+        $crate::println!(format_args!($($arg)*));
+        $crate::_shutdown($failure);
+    }
 }
 
 #[doc(hidden)]

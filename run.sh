@@ -1,22 +1,31 @@
-help() {
-    echo "Run the script as following:"
-    echo
-    echo "    ./run.sh [option]?"
-    echo
-    echo "Supported parameters:"
-    echo "    --temp: Clear up build files after launching."
+nls="\n"
+nlts="\n\t"
+
+help_doc="
+
+Run the script as following:
+$nls$nlts
+    ./run.sh [option]?
+$nls$nls
+Supported parameters:
+$nls$nlts
+    --check: Check for environment.$nlts
+    --clean: Clean up build files.$nlts
+    --help: Check for available options.$nlts
+    --temp: Clear up build files after launching.$nlts
+
+"
+
+osr_help() {
+    echo -e $help_doc
 }
 
-run() {
-    qemu-system-riscv64 --version
-
+osr_run() {
     cd ./user
     ./build.sh --build-only
     cd ../
 
-    cp src/linker-qemu.ld src/linker.ld
     cargo build --release
-    rm src/linker.ld
 
     release_dir="target/riscv64gc-unknown-none-elf/release/"
 
@@ -32,30 +41,50 @@ run() {
         -machine virt \
         -nographic \
         -bios ../bootloader/rustsbi-qemu.bin \
-        -device loader,file=target/riscv64gc-unknown-none-elf/release/os.bin,addr=0x80200000
+        -device loader,file=${release_dir}os.bin,addr=0x80200000
 }
 
-clean() {
+osr_clean() {
     cargo clean
     cd user
     cargo clean
     cd ../
 }
 
+osr_check() {
+    echo -e "Version of Rust toolchain."
+    rustc --version
+
+    echo -e "\nVersion of Cargo."
+    cargo --version
+
+    echo -e "\nVersion of Qemu simulator."
+    qemu-system-riscv64 --version
+}
+
 # Optional parameter.
 if [ $# == 0 ]
 then
-    run
+    # Run by default for no extra options.
+    osr_run
 elif [ $# == 1 ]
 then
     if [ $1 == "--help" ]
     then
-        help
+        osr_help
     elif [ $1 == "--temp" ]
     then
-        run
-        clean
+        osr_run
+        osr_clean
+    elif [ $1 == "--check" ]
+    then
+        osr_check
+    elif [ $1 == "--clean" ]
+    then
+        osr_clean
     else
-        echo "Unresolved parameter."
+        echo Unresolved parameter.
     fi
+else
+    echo Unresolved parameter.
 fi

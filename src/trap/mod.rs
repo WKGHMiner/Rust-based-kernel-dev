@@ -23,9 +23,7 @@ pub fn init() {
         fn __alltraps();
     }
 
-    unsafe {
-        stvec::write(__alltraps as usize, TrapMode::Direct);
-    }
+    unsafe { stvec::write(__alltraps as usize, TrapMode::Direct) }
 }
 
 fn handle_exception(ctx: &mut TrapContext, exc: Exception) -> &mut TrapContext {

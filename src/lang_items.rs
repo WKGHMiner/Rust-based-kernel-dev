@@ -30,9 +30,8 @@ pub fn handle_panic(info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[panic_handler]
 pub fn handle_panic(info: &PanicInfo) -> ! {
-    use crate::warn;
-
-    warn!("Test failed.");
+    error!("Test failed.");
+    unsafe { print_stack_trace() }
     
     shutdown!(true);
 }

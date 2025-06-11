@@ -2,13 +2,16 @@
 name = "os"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/WKGHMiner/Rust-based-kernel-dev"
 
 [profile.release]
 debug = true
 
 [dependencies]
+collections = { git = "https://github.com/WKGHMiner/collections", features = [] }
+
+user = { path = "./user" }
+
 sbi-rt = { version = "0.0.3", features = ["legacy"] }
 lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
 riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] } 
-
-user = { path = "./user" }

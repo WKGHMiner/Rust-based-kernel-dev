@@ -1,18 +1,17 @@
 use core::{
     arch::asm,
-    slice::{from_raw_parts, from_raw_parts_mut},
-    mem::size_of,
+    slice::from_raw_parts
 };
 use crate::{
     shutdown,
     info, info_print, warn,
-    sync::SpinLock,
-    trap::TrapContext
+    trap::TrapContext,
+    sync::UPCell
 };
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref APP_MANAGER: SpinLock<AppManager> = {
+    static ref APP_MANAGER: UPCell<AppManager> = {
         // _num_app is a beacon that points to the include section of our applications.
         unsafe extern "C" {
             safe fn _num_app();
@@ -27,7 +26,7 @@ lazy_static! {
         app_start[..=num_app].copy_from_slice(app_start_raw);
 
         let manager = AppManager { num_app, current_app: 0, app_start };
-        SpinLock::new(manager)
+        unsafe { UPCell::new(manager) }
     };
 }
 
@@ -57,8 +56,7 @@ impl KernelStack {
     pub fn push_context(&self, ctx: TrapContext) -> &'static mut TrapContext {
         let ptr = (self.get_stack_pointer() - size_of::<TrapContext>()) as *mut TrapContext;
         unsafe {
-            *ptr = ctx;
-
+            ptr.write(ctx);
             ptr.as_mut().unwrap()
         }
     }
@@ -104,15 +102,10 @@ impl AppManager {
             (addr as *mut u8).write_volatile(0)
         }
 
-        let src = from_raw_parts(
+        (APP_BASE_ADDR as *mut u8).copy_from(
             self.app_start[app_id] as *const u8,
             self.app_start[app_id + 1] - self.app_start[app_id]
         );
-        let dst = from_raw_parts_mut(
-            APP_BASE_ADDR as *mut u8,
-            src.len()
-        );
-        dst.copy_from_slice(src);
 
         asm!("fence.i");
     }
@@ -131,15 +124,16 @@ pub fn init() {
 }
 
 pub fn print_app_info() {
-    APP_MANAGER.lock().print_app_info();
+    APP_MANAGER.borrow_mut().print_app_info();
 }
 
 pub fn run_next_app() -> ! {
-    APP_MANAGER.scoped(|mut manager| {
+    {
+        let mut manager = APP_MANAGER.borrow_mut();
         let current = manager.get_current_app();
         unsafe { manager.load_app(current) }
         manager.move_to_next_app();
-    });
+    }
 
     let ctx = TrapContext::new(APP_BASE_ADDR, USER_STACK.get_stack_pointer());
     unsafe extern "C" { fn __restore(cx_addr: usize); }

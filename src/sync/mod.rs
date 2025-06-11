@@ -1,5 +1,3 @@
-// Include section.
-mod spin;
+mod upcell;
 
-// Export section.
-pub use spin::{SpinLock, LockError};
+pub use upcell::UPCell;
